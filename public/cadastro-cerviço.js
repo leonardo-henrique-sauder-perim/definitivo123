@@ -5,14 +5,13 @@ async function cadastrarCliente(event) {
 
     const cliente = {
         nome: document.getElementById("nome").value,
-        telefone: document.getElementById("telefone").value,
-        email: document.getElementById("email").value,
-        cpf: document.getElementById("cpf").value,
-        endereco: document.getElementById("endereco").value
+        preco: document.getElementById("preco").value,
+        duracao: document.getElementById("duracao").value,
+        descricao: document.getElementById("descricao").value
     };
 
     try {
-        const response = await fetch('/clientes', {
+        const response = await fetch('/servicos', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
