@@ -33,6 +33,18 @@ db.serialize(() => {
             endereco TEXT
         )
     `);
+
+    db.run(`
+        CREATE TABLE IF NOT EXISTS barbeiros (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT NOT NULL,
+            cpf TEXT NOT NULL UNIQUE,
+            email TEXT,
+            telefone TEXT,
+            especialidade TEXT,
+            endereco TEXT
+        )
+    `);
     
 
     console.log('Tabelas criadas com sucesso.');
@@ -90,22 +102,91 @@ app.get('/clientes', (req, res) => {
     }
 });
 
+///////////////////////////// Rotas para Barbeiro /////////////////////////////
+///////////////////////////// Rotas para Barbeiro /////////////////////////////
+///////////////////////////// Rotas para Barbeiro /////////////////////////////
+
+// Atualizar barbeiros
+app.put('/barbeiros/cpf/:cpf', (req, res) => {
+    const { cpf } = req.params;
+    const { nome, email, telefone, especialidade, endereco } = req.body;
+
+    const query = `UPDATE barbeiros SET nome = ?, email = ?, telefone = ?, especialidade = ? endereco = ? WHERE cpf = ?`;
+    db.run(query, [nome, email, telefone, endereco, especialidade, cpf], function (err) {
+        if (err) {
+            return res.status(500).send('Erro ao atualizar barbeiro.');
+        }
+        if (this.changes === 0) {
+            return res.status(404).send('Barbeiro não encontrado.');
+        }
+        res.send('B atualizado com sucesso.');
+    });
+});
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Cadastrar barbeiros
+app.post('/barbeiros', (req, res) => {
+    const { nome, cpf, email, telefone, especialidade, endereco } = req.body;
+
+    if (!nome || !cpf) {
+        return res.status(400).send('Nome e CPF são obrigatórios.');
+    }
+
+    const query = `INSERT INTO barbeiros (nome, cpf, email, telefone, especialidade, endereco) VALUES (?, ?, ?, ?, ?, ?)`;
+    db.run(query, [nome, cpf, email, telefone, especialidade, endereco], function (err) {
+        if (err) {
+            return res.status(500).send('Erro ao cadastrar barbeiro.');
+        }
+        res.status(201).send({ id: this.lastID, message: 'Barbeiro cadastrado com sucesso.' });
+    });
+});
+/////////////////////////////////////////////////////////////////////
+// Listar barbeiros
+// Endpoint para listar todos os barbeiros ou buscar por CPF
+app.get('/barbeiros', (req, res) => {
+    const cpf = req.query.cpf || '';  // Recebe o CPF da query string (se houver)
+
+    if (cpf) {
+        // Se CPF foi passado, busca barbeiros que possuam esse CPF ou parte dele
+        const query = `SELECT * FROM barbeiros WHERE cpf LIKE ?`;
+
+        db.all(query, [`%${cpf}%`], (err, rows) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ message: 'Erro ao buscar barbeiros.' });
+            }
+            res.json(rows);  // Retorna os barbeiros encontrados ou um array vazio
+        });
+    } else {
+        // Se CPF não foi passado, retorna todos os barbeiros
+        const query = `SELECT * FROM barbeiros`;
+
+        db.all(query, (err, rows) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ message: 'Erro ao buscar barbeiros.' });
+            }
+            res.json(rows);  // Retorna todos os barbeiros
+        });
+    }
+});
+
 
 
 // Atualizar cliente
-app.put('/clientes/cpf/:cpf', (req, res) => {
+app.put('/barbeiros/cpf/:cpf', (req, res) => {
     const { cpf } = req.params;
-    const { nome, email, telefone, endereco } = req.body;
+    const { nome, email, telefone, especialidade, endereco } = req.body;
 
-    const query = `UPDATE clientes SET nome = ?, email = ?, telefone = ?, endereco = ? WHERE cpf = ?`;
-    db.run(query, [nome, email, telefone, endereco, cpf], function (err) {
+    const query = `UPDATE barbeiros SET nome = ?, email = ?, telefone = ?, especialidade = ? endereco = ? WHERE cpf = ?`;
+    db.run(query, [nome, email, telefone, especialidade, endereco, cpf], function (err) {
         if (err) {
-            return res.status(500).send('Erro ao atualizar cliente.');
+            return res.status(500).send('Erro ao atualizar barbeiros.');
         }
         if (this.changes === 0) {
-            return res.status(404).send('Cliente não encontrado.');
+            return res.status(404).send('Barbeiro não encontrado.');
         }
-        res.send('Cliente atualizado com sucesso.');
+        res.send('Barbeiro atualizado com sucesso.');
     });
 });
 
